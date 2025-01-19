@@ -42,4 +42,5 @@ class ReviewMenuAdmin(admin.ModelAdmin):
 class ShipperAdmin(admin.ModelAdmin):
     list_display = ('user','age','cccd','license_plate','address','phone','vehicle')
     
+
     
