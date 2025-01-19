@@ -1,0 +1,373 @@
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import authenticate, login, logout
+from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import generics
+from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import JSONParser
+from json import JSONDecodeError
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+import traceback
+
+
+class RegisterView(APIView):
+ def post(self, request):
+    try:
+        data = JSONParser().parse(request)
+        serializer = RegisterSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except JSONDecodeError:
+            return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+class LoginView(APIView):
+    def post(self,request):
+        data = JSONParser().parse(request)
+        username=data.get("username")
+        password=data.get("password")
+        
+        if username:
+                user=authenticate(request,username=username,password=password)
+                if user:
+                    login(request,user)
+                    return Response({
+                        "id":user.id,
+                        "username":username,
+                        "message":"Login Success"
+                     },status=status.HTTP_200_OK)
+                return Response({
+                    "message":"Login Fail"
+                },status=status.HTTP_404_NOT_FOUND)
+               
+       
+
+class LogoutView(APIView):
+    def post(self, request):
+        logout(request)
+        return Response({
+            "message": "Logout successful"
+        }, status=status.HTTP_200_OK)
+        
+
+class UserList(generics.ListCreateAPIView):
+    queryset=User.objects.all()
+    serializer_class=UserSerializer
+    
+
+class SearchList(APIView):
+    permission_classes = (IsAuthenticated,)
+    def post(self, request):
+        data = JSONParser().parse(request)  # Lấy dữ liệu từ request
+        name = data.get("name")  # Lấy giá trị 'name' từ dữ liệu
+        if name:
+            user = User.objects.filter(username__icontains=name)  # Lọc người dùng theo tên
+            if user.exists():  # Kiểm tra nếu có người dùng khớp
+                serializer = SearchSerializer(user, many=True)
+                return Response(serializer.data)  # Trả về kết quả tìm kiếm
+        return Response({"message": "Not found"}, status=400)  # Trả về thông báo nếu không tìm thấy
+
+    
+class DeleteUser(APIView):
+    def post(self,request):
+        data = JSONParser().parse(request)
+        id=data.get("id")
+        if id:
+            try:
+                user=User.objects.get(id=id)
+                user.delete()
+                return Response({"message":"Delete completed"},status=status.HTTP_204_NO_CONTENT)
+            except:
+                return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)    
+        return Response({"message": "ID is required"}, status=status.HTTP_400_BAD_REQUEST)    
+
+class UpdateUser(APIView):
+    def post(self,request,pk):
+        if pk:
+            try:
+                data = JSONParser().parse(request)
+                username=data.get("username")
+                user=User.objects.get(id=pk)
+                if username:
+                    user.username=username
+                    user.save()
+                serializer=SearchSerializer(user)
+                return Response(serializer.data)
+            except User.DoesNotExist:
+                return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message": "ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserDetail(generics.RetrieveUpdateDestroyAPIView): #METHOD Update:PATCH  Delete:DELETE 
+    permission_classes = (IsAuthenticated,)
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field="pk"
+
+class UpdateProfile(APIView):
+    permission_class=(IsAuthenticated,)
+    def post(self,request):
+         data = JSONParser().parse(request)
+         pk=data.get("pk")
+         if pk:
+            try:
+                customer=Customer.objects.get(id=pk)
+                user=User.objects.get(id=customer.user.id)
+
+                if customer:
+                    customer.user.first_name=data.get("name")
+                    customer.age=data.get("age")
+                    customer.phone=data.get("phone")
+                    customer.address=data.get("address")
+                    user.first_name=data.get("name")
+                    user.save()
+                    customer.save()
+                serializer=CustomerSerializer(customer)
+                return Response(serializer.data)
+            
+            except Customer.DoesNotExist:
+                return Response({"message": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+         return Response({"message": "ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class Profile(APIView):
+    def get(self,request,pk):
+        if request.user.is_authenticated:
+            customer=Customer.objects.filter(id=pk).first()
+            if customer:
+                serializer=CustomerSerializer(customer)
+                return Response(serializer.data)
+            else:
+                return Response({"error": "Customer not found",
+                                 "request": request.user.id if request.user.is_authenticated else "Anonymous"
+                                 }, status=404)
+        
+        else:
+            return Response({"error": "Unauthorized"}, status=401)
+  
+
+class Register_Restaurant(APIView):
+    def post(self,request):
+        try:
+            data=JSONParser().parse(request)
+            user_id=data.get("id")
+            user=User.objects.get(id=user_id)
+            data['user']=user.id
+            if request.user.is_authenticated:
+                serializers=RegisterRestaurant(data=data)
+                if serializers.is_valid():
+                    serializers.save()
+                    return Response(serializers.data)
+                else:
+                    return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except JSONDecodeError:
+                return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+
+class Restaurant_Retrieve(generics.RetrieveUpdateDestroyAPIView):
+    queryset=Restaurant.objects.all()
+    serializer_class=RegisterRestaurant
+    lookup_field="pk"
+            
+        
+class RestaurantList(generics.ListCreateAPIView):
+    queryset=Restaurant.objects.all()
+    serializer_class=RegisterRestaurant
+
+class AddFoodType(APIView):
+    def post(self,request):
+        try:
+            data=JSONParser().parse(request)
+            if isinstance(data,list):
+                serializer=Serializer_FoodType(data=data,many=True)
+            else:
+                serializer=Serializer_FoodType(data=data)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)  # Trả về phản hồi thành công
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except JSONDecodeError:
+            return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+
+class FoodTypeList(generics.ListCreateAPIView):
+    queryset=TypeFood.objects.all()
+    serializer_class=Serializer_FoodType
+
+class FoodType_Retrieve(generics.RetrieveUpdateDestroyAPIView):
+    queryset=TypeFood.objects.all()
+    serializer_class=Serializer_FoodType
+    lookup_field="pk"
+    def get(self, request, *args, **kwargs):
+        # Đây là phương thức GET để lấy dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().get(request, *args, **kwargs)
+    
+    def patch(self, request, *args, **kwargs):
+        
+        # Đây là phương thức PATCH để cập nhật dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().patch(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        # Đây là phương thức DELETE để xóa dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().delete(request, *args, **kwargs)
+class AddMenu(APIView):
+    def post(self,request):
+        try:
+            data=JSONParser().parse(request)
+            if isinstance(data,list):
+                serializer=Serializer_Menu(data=data,many=True)
+            else:
+                serializer=Serializer_Menu(data=data)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)  # Trả về phản hồi thành công
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except JSONDecodeError:
+            return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+
+class MenuList(APIView):
+  def get(self,request,pk):
+    try:
+        restaurant=Restaurant.objects.get(id=pk)
+        menu=MenuFood.objects.filter(restaurant=restaurant)
+        
+        serializer=Serializer_Menu(menu,many=True)
+        if serializer:
+            return Response(serializer.data, status=status.HTTP_200_OK)  # Trả về phản hồi thành công
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except JSONDecodeError:
+            return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+
+        
+class Menu_Retrieve(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MenuFood.objects.all()  # Khai báo queryset ở đây
+    serializer_class = Serializer_Menu
+    lookup_field = 'pk'
+    def get(self, request, *args, **kwargs):
+        # Đây là phương thức GET để lấy dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().get(request, *args, **kwargs)
+    
+    def patch(self, request, *args, **kwargs):
+        
+        # Đây là phương thức PATCH để cập nhật dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().patch(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        # Đây là phương thức DELETE để xóa dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().delete(request, *args, **kwargs)
+
+class AddReviewMenu(APIView):
+    def post(self,request):
+        try:
+            data=JSONParser().parse(request)
+            serializers=Serializer_ReviewMenu(data=data)
+            if serializers.is_valid():
+                serializers.save()
+                return Response(serializers.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+
+class ReviewMenu_Retrieve(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ReviewMenu.objects.all()  # Khai báo queryset ở đây
+    serializer_class = Serializer_ReviewMenu
+    lookup_field = 'pk'
+    def get(self, request, *args, **kwargs):
+        # Đây là phương thức GET để lấy dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().get(request, *args, **kwargs)
+    
+    def patch(self, request, *args, **kwargs):
+        
+        # Đây là phương thức PATCH để cập nhật dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().patch(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        # Đây là phương thức DELETE để xóa dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().delete(request, *args, **kwargs)
+
+class ListReviewMenu(APIView):  
+        def get(self,request,pk):
+            try:
+                review=ReviewMenu.objects.filter(menu=pk)
+                serializer=Serializer_ReviewMenu(review,many=True)
+                if serializer:
+                    return Response(serializer.data, status=status.HTTP_200_OK)  # Trả về phản hồi thành công
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                 return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+
+class RegisterShipper(APIView):
+    def post(self, request):
+        try:
+            data = JSONParser().parse(request)
+            serializer = Serializer_Shipper(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            # Lấy thông tin chi tiết lỗi
+            error_message = str(e)
+            error_trace = traceback.format_exc()  # Lấy thông tin stack trace lỗi
+            return JsonResponse({
+                "result": "error",
+                "message": "Json decoding error",
+                "error": error_message,
+                "trace": error_trace
+            }, status=400)
+
+        
+class Shipper_Retrieve(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Shipper.objects.all()  # Khai báo queryset ở đây
+    serializer_class = Serializer_Shipper
+    lookup_field = 'pk'
+    def get(self, request, *args, **kwargs):
+        # Đây là phương thức GET để lấy dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().get(request, *args, **kwargs)
+    
+    def patch(self, request, *args, **kwargs):
+        
+        # Đây là phương thức PATCH để cập nhật dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().patch(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        # Đây là phương thức DELETE để xóa dữ liệu
+        if not request.user.is_authenticated:
+            return Response({"error": "Unauthorized"}, status=401)
+        return super().delete(request, *args, **kwargs)
+            
+
+        
