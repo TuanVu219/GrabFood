@@ -20,7 +20,18 @@ class User(AbstractUser,Model):
     role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, blank=True)
     groups = models.ManyToManyField(Group, related_name='customuser_set', blank=True)
     user_permissions = models.ManyToManyField(Permission, related_name='customuser_permissions_set', blank=True)
-    
+    first_name=models.CharField(max_length=30,blank=False,null=False)
+    last_name=models.CharField(max_length=30,blank=False,null=False)
+    email_validator=RegexValidator(
+        regex=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+        message='Enter a valid email address.'
+    )
+    email = models.EmailField(
+        unique=True, 
+        blank=False, 
+        null=False, 
+        validators=[email_validator]
+    ) 
     
     
     def __str__(self):

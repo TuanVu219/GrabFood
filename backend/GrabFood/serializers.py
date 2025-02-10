@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper
+from .models import User, Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart
 from django.contrib.auth.password_validation import validate_password
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -9,37 +9,32 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password_confirmation', 'role')
+        fields = ('username', 'password', 'password_confirmation', 'role','email','first_name','last_name')
 
     def validate(self, data):
-        # Kiểm tra nếu mật khẩu và xác nhận mật khẩu khớp
         if data['password'] != data['password_confirmation']:
             raise serializers.ValidationError("Passwords must match.")
         return data
     
     def create(self, validated_data):
-        # Xóa trường 'password_confirmation' vì không cần lưu vào database
         validated_data.pop('password_confirmation')
         
-        # Lấy các giá trị từ validated_data
         role = validated_data.pop('role', None) or Role.objects.filter(role_name="Customer").first()
-        # Tạo người dùng mới với mật khẩu đã được mã hóa
         user = User.objects.create_user(
             username=validated_data['username'],
             password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            email=validated_data['email'],
             role=role,
 
         )
-        if Customer.objects.filter(phone=validated_data.get('phone')).exists():
-            raise serializers.ValidationError("This phone number is already registered.")
+
     
-         # Tạo đối tượng Customer cho người dùng mới (nếu không có số điện thoại trùng lặp)
         customer = Customer.objects.create(user=user)
-        # Gán vai trò nếu có
         if role:
             user.role = role
         
-        # Lưu người dùng
         user.save()
         customer.save()
         return user
@@ -48,7 +43,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model=User
-        fields=("username","password")
+        fields=("username","password","email","first_name","last_name")
         
 class SearchSerializer(serializers.ModelSerializer):
     class Meta:
@@ -57,10 +52,12 @@ class SearchSerializer(serializers.ModelSerializer):
         
 
 class CustomerSerializer(serializers.ModelSerializer):
-    name=serializers.CharField(source='user.first_name',allow_blank=True,required=False)
+    first_name = serializers.CharField(source='user.first_name', allow_blank=True, required=False)
+    last_name = serializers.CharField(source='user.last_name', allow_blank=True, required=False)
+    email = serializers.EmailField(source='user.email', allow_blank=True, required=False)
     class Meta:
         model=Customer
-        fields=("name","age","phone","address")
+        fields=("age","phone","address","email","first_name","last_name")
         
 class RegisterRestaurant(serializers.ModelSerializer):
     class Meta:
@@ -90,3 +87,7 @@ class Serializer_Shipper(serializers.ModelSerializer):
     class Meta:
         model=Shipper
         fields=('user','age','cccd','license_plate','address','phone','vehicle')
+class Serializer_Cart(serializers.ModelSerializer):
+    class Meta:
+        model=Cart
+        fields=('restaurant','customer','created_at','updated_at')

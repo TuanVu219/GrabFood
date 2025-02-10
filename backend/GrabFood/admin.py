@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import User,Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper
+from .models import User,Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart
 
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('id', 'username', 'password', 'role')
+    list_display = ('id', 'username', 'password', 'role','email','first_name','last_name')
     
 admin.site.register(Role)
 
@@ -41,6 +41,12 @@ class ReviewMenuAdmin(admin.ModelAdmin):
 @admin.register(Shipper)
 class ShipperAdmin(admin.ModelAdmin):
     list_display = ('user','age','cccd','license_plate','address','phone','vehicle')
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('restaurant','customer','created_at','updated_at')
     
+
+
 
     

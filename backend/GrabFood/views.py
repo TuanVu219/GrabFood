@@ -2,18 +2,69 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
-from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper
+from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
-from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper
+from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
 from json import JSONDecodeError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 import traceback
+from django.shortcuts import render
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
+def home(request):
+    return render(request,'home.html')
+# class PasswordResetRequestView(APIView):
+#     def post(self,request):
+#         email=request.data.get("email")
+#         if not email:
+#             return JsonResponse({"result": "error", "message": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+#         user=User.objects.filter(email=email).first()
+#         if user:
+#             token=default_token_generator.make_token(user)
+#             uid=urlsafe_base64_encode(str(user.pk).encode('utf-8'))
+            
+#             reset_link=get_current_site(request).domain+reverse('password_reset_confirm',kwargs={'uidb64':uid,'token':token})
+#             message = render_to_string('password_reset_email.html', {
+#                 'reset_link': reset_link,
+#                 'user': user,
+#             })     
+#                     # Gửi email cho người dùng với liên kết đặt lại mật khẩu
+#             subject = 'Password Reset Request'
+#             send_mail(
+#                 subject,              # Tiêu đề email
+#                 message,              # Nội dung email
+#                 'no-reply@yourdomain.com', # Email người gửi
+#                 [email],              # Người nhận email
+#                 fail_silently=False,  # Nếu có lỗi sẽ báo lỗi
+#             )
+       
+#             return JsonResponse({
+#                  "message": "Password reset link generated",
+#                 "reset_link": reset_link
+#             },status=status.HTTP_200_OK)
+#         return JsonResponse({"result": "error", "message": "Email not found"}, status=status.HTTP_404_NOT_FOUND)
+# class PasswordResetConfirmView(APIView):
+#     def post(self, request, uidb64, token):
+#         try:
+#             uid = urlsafe_base64_decode(uidb64).decode()
+#             user = User.objects.get(pk=uid)
 
+#             if default_token_generator.check_token(user, token):
+#                 password = request.data.get("password")
+#                 if password:
+#                     user.set_password(password)
+#                     user.save() 
+#                     return Response({"message": "Password has been successfully reset"}, status=status.HTTP_200_OK)
+#                 return JsonResponse({"result": "error", "message": "Password is required"}, status=status.HTTP_400_BAD_REQUEST)
+#             else:
+#                 return JsonResponse({"result": "error", "message": "Invalid token or expired link"}, status=status.HTTP_400_BAD_REQUEST)
+#         except Exception as e:
+#             return JsonResponse({"result": "error", "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 class RegisterView(APIView):
  def post(self, request):
     try:
@@ -92,6 +143,7 @@ class UpdateUser(APIView):
             try:
                 data = JSONParser().parse(request)
                 username=data.get("username")
+              
                 user=User.objects.get(id=pk)
                 if username:
                     user.username=username
@@ -119,11 +171,12 @@ class UpdateProfile(APIView):
                 user=User.objects.get(id=customer.user.id)
 
                 if customer:
-                    customer.user.first_name=data.get("name")
+                    customer.user.first_name=data.get("first_name")
+                    customer.user.last_name=data.get("last_name")
+                    customer.user.email=data.get("email")
                     customer.age=data.get("age")
                     customer.phone=data.get("phone")
                     customer.address=data.get("address")
-                    user.first_name=data.get("name")
                     user.save()
                     customer.save()
                 serializer=CustomerSerializer(customer)
@@ -369,5 +422,36 @@ class Shipper_Retrieve(generics.RetrieveUpdateDestroyAPIView):
             return Response({"error": "Unauthorized"}, status=401)
         return super().delete(request, *args, **kwargs)
             
+class AddCart(APIView):
+    def post(self,request):
+        try:
+            data=JSONParser().parse(request)
+            serializers=Serializer_Cart(data=data)
+            if serializers.is_valid():
+                serializers.save()
+                return Response(serializers.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
 
+class SearchCart(APIView):
+    def get(self,request,id_customer,id_restaurant):
+        cart=Cart.objects.filter(
+            restaurant=id_restaurant,
+            customer=id_customer
+        ).first()
+        if cart:
+          serializer=Serializer_Cart(cart)
+          if serializer:
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+          else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return JsonResponse({"result": "error","message": "Cart not found"}, status= 400)
+
+            
         
+            
+            
+            

@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     'django_filters', #Used with DRF
     'rest_framework', #DRF package
     'GrabFood', # New app
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -38,6 +39,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',  
 ]
 
 ROOT_URLCONF = 'PBL5.urls'
@@ -53,10 +55,29 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',  
+                'social_django.context_processors.backends', 
             ],
         },
     },
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.facebook.FacebookOAuth2',
+    'social_core.backends.twitter.TwitterOAuth',
+    'social_core.backends.github.GithubOAuth2',
+
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+
+LOGIN_URL = 'login'
+LOGOUT_URL = 'logout'
+LOGIN_REDIRECT_URL = 'home'
+
+
+SOCIAL_AUTH_FACEBOOK_KEY = '1652171999016910'  
+SOCIAL_AUTH_FACEBOOK_SECRET = '86c297890ad7fe6c6d84cf55d0f3c845' 
 
 WSGI_APPLICATION = 'PBL5.wsgi.application'
 
@@ -155,4 +176,12 @@ REST_FRAMEWORK = {
     ),
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',  # Định dạng mặc định là JSON
 }
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Hoặc server SMTP bạn sử dụng
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'doancongtuanvudn2004@gmail.com'
+# EMAIL_HOST_PASSWORD = 'urdj jbwg bqzb dmjz'
+EMAIL_HOST_PASSWORD = 'joop whjq cxya jwrq'
 
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
