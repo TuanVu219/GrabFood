@@ -119,4 +119,15 @@ class CartItem(Model):
     
     def __str__(self):
         return f"{self.quantity} of {self.food.food_name} in cart for {self.cart.customer.user.username}"
-    
+
+class History(Model):
+    customer=models.OneToOneField(Customer,on_delete=models.Case,related_name='customer_history')
+    menu=models.OneToOneField(MenuFood,on_delete=models.CASCADE,related_name='menu_history')
+    count=models.IntegerField(
+        default=1,
+        validators=[MinValueValidator(1)],
+        help_text="Số lượng món ăn đã đặt trong lịch sử."
+    )
+    delivery_date=models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"History: {self.customer.user.username} - {self.menu.food_name} x {self.count}"
