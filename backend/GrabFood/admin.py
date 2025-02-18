@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User,Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart
+from .models import User,Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,History,CartItem
 
 
 @admin.register(User)
@@ -46,7 +46,14 @@ class ShipperAdmin(admin.ModelAdmin):
 class CartAdmin(admin.ModelAdmin):
     list_display = ('restaurant','customer','created_at','updated_at')
     
-
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('cart','food','quantity')
+    
+@admin.register(History)
+class HistoryAdmin(admin.ModelAdmin):
+    list_display = ('customer','menu','count','delivery_date')
+    
 
 
     

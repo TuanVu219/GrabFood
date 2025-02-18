@@ -450,6 +450,21 @@ class SearchCart(APIView):
         else:
             return JsonResponse({"result": "error","message": "Cart not found"}, status= 400)
 
+
+class DeleteCart(APIView):
+    def delete(self,request,id_customer,id_restaurant):
+        try:
+            cart=Cart.objects.filter(
+                customer=id_customer,
+                restaurant=id_restaurant
+            ).first()
+            if cart:
+                cart.delete()
+                return Response({"result": "success", "message": "Cart deleted"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"result": "error", "message": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"result": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
         
             
