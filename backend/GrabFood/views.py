@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
-from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart
+from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart,Serializer_CartItem
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
 from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart
@@ -466,7 +466,42 @@ class DeleteCart(APIView):
         except Exception as e:
             return Response({"result": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
-        
+class AddCartItem(APIView):
+    def post(self,request):
+        try:
+            data=JSONParser().parse(request)
+           
+            customer_id = data.get("customer")
+            restaurant_id = data.get("restaurant")
+            
+            if not customer_id or not restaurant_id:
+                return Response({"result": "error", "message": "Customer and Restaurant are required"}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                customer = Customer.objects.get(id=customer_id)
+                restaurant = Restaurant.objects.get(id=restaurant_id)
+            except Customer.DoesNotExist:
+                return Response({"result": "error", "message": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+            except Restaurant.DoesNotExist:
+                return Response({"result": "error", "message": "Restaurant not found"}, status=status.HTTP_404_NOT_FOUND)
+                
+            
+            cart=Cart.objects.filter(customer=customer,restaurant=restaurant).first()
+            if not cart:
+                cart=Cart.objects.create(customer=customer,restaurant=restaurant)
+            data["cart"]=cart.id
+            data.pop("customer",None)
+            data.pop("restaurant",None)
+            serializer=Serializer_CartItem(data=data)
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except JSONDecodeError:
+            return Response({"result": "error", "message": "Invalid JSON format"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"result": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
             
             

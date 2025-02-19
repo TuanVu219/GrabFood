@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart
+from .models import User, Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,CartItem
 from django.contrib.auth.password_validation import validate_password
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -91,3 +91,7 @@ class Serializer_Cart(serializers.ModelSerializer):
     class Meta:
         model=Cart
         fields=('restaurant','customer','created_at','updated_at')
+class Serializer_CartItem(serializers.ModelSerializer):
+    class Meta:
+        model=CartItem
+        fields=('cart','food','quantity')
