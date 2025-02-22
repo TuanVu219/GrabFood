@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart,Serializer_CartItem
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
-from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart
+from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,CartItem
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
 from json import JSONDecodeError
@@ -502,6 +502,15 @@ class AddCartItem(APIView):
             return Response({"result": "error", "message": "Invalid JSON format"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"result": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-            
-            
+class CartItem_List(APIView):
+    def get(self,request,id_cart):
+        cart=Cart.objects.get(id=id_cart)
+        if cart:
+            cart_item=CartItem.objects.filter(cart=cart)
+            serializer=Serializer_CartItem(cart_item,many=True)
+            if serializer:
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return JsonResponse({"result": "error","message": "CartItem not found"}, status= 400)         
