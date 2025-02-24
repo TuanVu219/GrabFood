@@ -131,3 +131,6 @@ class History(Model):
     delivery_date=models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f"History: {self.customer.user.username} - {self.menu.food_name} x {self.count}"
+class FavoriteMenu(Model):
+    customer=models.ManyToManyField(Customer, related_name='customuser_favouritemenu')
+    menu=models.ManyToManyField(MenuFood,related_name='menu_favouritemenu')

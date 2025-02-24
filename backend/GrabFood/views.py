@@ -501,7 +501,7 @@ class AddCartItem(APIView):
         except JSONDecodeError:
             return Response({"result": "error", "message": "Invalid JSON format"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"result": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"result": "er6yyror", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 class CartItem_List(APIView):
     def get(self,request,id_cart):
         cart=Cart.objects.get(id=id_cart)
