@@ -55,7 +55,7 @@ class HistoryAdmin(admin.ModelAdmin):
     list_display = ('customer','menu','count','delivery_date')
 @admin.register(FavoriteMenu)
 class FavouriteMenuAdmin(admin.ModelAdmin):
-    list_display = ('customer','menu')
+    list_display = ('id',)
 
 
     

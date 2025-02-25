@@ -2,10 +2,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
-from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart,Serializer_CartItem
+from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart,Serializer_CartItem,Serializer_FavouriteMenu
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
-from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,CartItem
+from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,CartItem,FavoriteMenu
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
 from json import JSONDecodeError
@@ -514,3 +514,32 @@ class CartItem_List(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return JsonResponse({"result": "error","message": "CartItem not found"}, status= 400)         
+class AddFavouriteMenu(APIView):
+    def post(self,request):
+        try:
+            data=JSONParser().parse(request)
+            serializer=Serializer_FavouriteMenu(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+class ListFavouriteMenu(APIView):
+    def get(self, request):
+        try:
+            user = request.user
+            customer=Customer.objects.get(user=user)
+            favourite_menus = FavoriteMenu.objects.filter(customer=customer)
+            
+            serializer = Serializer_FavouriteMenu(favourite_menus, many=True)
+            
+            if serializer:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return JsonResponse({"result": "error", "message": str(e)}, status=400)    
+       
+        

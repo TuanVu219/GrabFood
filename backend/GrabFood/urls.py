@@ -7,7 +7,7 @@ from .views import (
     Restaurant_Retrieve, RestaurantList, AddFoodType, FoodTypeList, 
     FoodType_Retrieve, AddMenu, MenuList, Menu_Retrieve, AddReviewMenu, 
     ListReviewMenu, ReviewMenu_Retrieve, RegisterShipper, Shipper_Retrieve, 
-    AddCart, SearchCart
+    AddCart, SearchCart,AddFavouriteMenu,ListFavouriteMenu
 )
 from rest_framework.authtoken.views import obtain_auth_token
 from django.contrib.auth import views as auth_views
@@ -91,4 +91,11 @@ urlpatterns += [
 # Miscellaneous URL
 urlpatterns += [
     path('', views.home, name='home'),
+]
+
+#FavouriteMenu Urls
+urlpatterns += [
+    path('add_favouritemenu/', AddFavouriteMenu.as_view(), name='add_favouritemenu'),
+    path('list_favouritemenu/', ListFavouriteMenu.as_view(), name='list_favouritemenu'),
+
 ]
