@@ -542,4 +542,23 @@ class ListFavouriteMenu(APIView):
         except Exception as e:
             return JsonResponse({"result": "error", "message": str(e)}, status=400)    
        
+class DeleteFavouriteMenu(APIView):
+    def delete(self,request):
+        try:
+            data=JSONParser().parse(request)
+            user = request.user
+            customer=Customer.objects.get(user=user)
+            favourite=FavoriteMenu.objects.filter(
+                customer=customer,
+                menu=data['menu']
+            )
+            if favourite:
+                favourite.delete()
+                return Response({"result": "success", "message": "FavouriteMenu deleted"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"result": "error", "message": "FavouriteMenu not found"}, status=status.HTTP_404_NOT_FOUND)
+           
+        except Exception as e:
+            return JsonResponse({"result": "error", "message": str(e)}, status=400)    
+       
         
