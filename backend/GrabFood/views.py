@@ -513,7 +513,22 @@ class CartItem_List(APIView):
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return JsonResponse({"result": "error","message": "CartItem not found"}, status= 400)         
+            return JsonResponse({"result": "error","message": "CartItem not found"}, status= 400)     
+class DeleteCartItem(APIView):
+    def delete(self,request,id_cartitem,id_food):
+        try:
+            cartitem=CartItem.objects.filter(
+                cart=id_cartitem,
+                food=id_food
+            ).first()
+            if cartitem:
+                cartitem.delete()
+                return Response({"result": "success", "message": "Cart deleted"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"result": "error", "message": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"result": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
 class AddFavouriteMenu(APIView):
     def post(self,request):
         try:

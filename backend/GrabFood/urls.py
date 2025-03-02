@@ -7,7 +7,7 @@ from .views import (
     Restaurant_Retrieve, RestaurantList, AddFoodType, FoodTypeList, 
     FoodType_Retrieve, AddMenu, MenuList, Menu_Retrieve, AddReviewMenu, 
     ListReviewMenu, ReviewMenu_Retrieve, RegisterShipper, Shipper_Retrieve, 
-    AddCart, SearchCart,AddFavouriteMenu,ListFavouriteMenu,DeleteFavouriteMenu
+    AddCart, SearchCart,AddFavouriteMenu,ListFavouriteMenu,DeleteFavouriteMenu,AddCartItem
 )
 from rest_framework.authtoken.views import obtain_auth_token
 from django.contrib.auth import views as auth_views
@@ -98,5 +98,12 @@ urlpatterns += [
     path('add_favouritemenu/', AddFavouriteMenu.as_view(), name='add_favouritemenu'),
     path('list_favouritemenu/', ListFavouriteMenu.as_view(), name='list_favouritemenu'),
     path('delete_favouritemenu/', DeleteFavouriteMenu.as_view(), name='delete_favouritemenu'),
+
+]
+
+#CartItem Urls
+urlpatterns += [
+    path('add_cartitem/', AddCartItem.as_view(), name='add_cartitem'),
+   
 
 ]
