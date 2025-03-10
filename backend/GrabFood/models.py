@@ -134,3 +134,12 @@ class History(Model):
 class FavoriteMenu(Model):
     customer=models.ManyToManyField(Customer, related_name='customuser_favouritemenu')
     menu=models.ManyToManyField(MenuFood,related_name='menu_favouritemenu')
+    
+class Voucher(Model):
+    restaurant=models.ForeignKey(Restaurant,on_delete=models.CASCADE,related_name="restaurant_voucer")
+    value=models.IntegerField( null=False, blank=False)
+    minimum_order_value = models.IntegerField(null=False, blank=False)
+    expiration_date = models.DateTimeField(null=False, blank=False)
+
+    def __str__(self):
+        return f"Voucher {self.id} - Value: {self.value}"
