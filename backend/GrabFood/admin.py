@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User,Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,History,CartItem,FavoriteMenu
+from .models import User,Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,History,CartItem,FavoriteMenu,Voucher
 
 
 @admin.register(User)
@@ -55,7 +55,8 @@ class HistoryAdmin(admin.ModelAdmin):
     list_display = ('customer','menu','count','delivery_date')
 @admin.register(FavoriteMenu)
 class FavouriteMenuAdmin(admin.ModelAdmin):
-    list_display = ('id',)
-
-
+    list_display = ('id',) 
+@admin.register(Voucher)
+class VoucherAdmin(admin.ModelAdmin):
+    list_display = ('restaurant','value','minimum_order_value','expiration_date')
     
