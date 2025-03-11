@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,CartItem,FavoriteMenu
+from .models import User, Role,Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,CartItem,FavoriteMenu,Voucher
 from django.contrib.auth.password_validation import validate_password
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -99,3 +99,7 @@ class Serializer_FavouriteMenu(serializers.ModelSerializer):
     class Meta:
         model=FavoriteMenu
         fields=('customer','menu')
+class Serializer_Voucher(serializers.ModelSerializer):
+    class Meta:
+        model=Voucher
+        fields=('restaurant','value','minimum_order_value','expiration_date')

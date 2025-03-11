@@ -2,10 +2,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
-from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart,Serializer_CartItem,Serializer_FavouriteMenu
+from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart,Serializer_CartItem,Serializer_FavouriteMenu,Serializer_Voucher
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
-from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,CartItem,FavoriteMenu
+from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,CartItem,FavoriteMenu,Voucher
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
 from json import JSONDecodeError
@@ -574,6 +574,22 @@ class DeleteFavouriteMenu(APIView):
                 return Response({"result": "error", "message": "FavouriteMenu not found"}, status=status.HTTP_404_NOT_FOUND)
            
         except Exception as e:
-            return JsonResponse({"result": "error", "message": str(e)}, status=400)    
+            return JsonResponse({"result": "error", "message": str(e)}, status=400)   
+
+class AddVoucher(APIView):
+    def post(self,request):
+        try:
+            data=JSONParser().parse(request)
+            serializer=Serializer_Voucher(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+        
+            
+            
        
         

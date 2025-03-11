@@ -7,7 +7,7 @@ from .views import (
     Restaurant_Retrieve, RestaurantList, AddFoodType, FoodTypeList, 
     FoodType_Retrieve, AddMenu, MenuList, Menu_Retrieve, AddReviewMenu, 
     ListReviewMenu, ReviewMenu_Retrieve, RegisterShipper, Shipper_Retrieve, 
-    AddCart, SearchCart,AddFavouriteMenu,ListFavouriteMenu,DeleteFavouriteMenu,AddCartItem,CartItem_List,DeleteCartItem
+    AddCart, SearchCart,AddFavouriteMenu,ListFavouriteMenu,DeleteFavouriteMenu,AddCartItem,CartItem_List,DeleteCartItem,AddVoucher
 )
 from rest_framework.authtoken.views import obtain_auth_token
 from django.contrib.auth import views as auth_views
@@ -106,7 +106,10 @@ urlpatterns += [
     path('add_cartitem/', AddCartItem.as_view(), name='add_cartitem'),
     path('list_cartitem/<uuid:id_cart>/', CartItem_List.as_view(), name='list_cartitem'),
     path('delete_cartitem/', DeleteCartItem.as_view(), name='delete_cartitem'),
+]
 
-   
-
+#Voucher Urls
+urlpatterns += [
+    path('add_voucher/', AddVoucher.as_view(), name='add_voucher'),
+ 
 ]
