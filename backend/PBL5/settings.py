@@ -29,8 +29,21 @@ INSTALLED_APPS = [
     'GrabFood', # New app
     'rest_framework.authtoken',
     'social_django',
+    'django_celery_beat',
+     'corsheaders',
+     'django_celery_results',
 ]
+# RabbitMQ broker
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 
+# Redis làm backend (hoặc bạn có thể dùng database backend)
+CELERY_RESULT_BACKEND = 'django-db'
+# (Tùy chọn) Các cấu hình khác
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Ho_Chi_Minh'
+broker_connection_retry_on_startup = True
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -40,6 +53,23 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',  
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    'http://example.com',
+    'http://172.20.10.4:8000',
+]
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'DELETE',
+]
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',
 ]
 
 ROOT_URLCONF = 'PBL5.urls'

@@ -87,6 +87,109 @@ class Serializer_Shipper(serializers.ModelSerializer):
     class Meta:
         model=Shipper
         fields=('user','age','cccd','license_plate','address','phone','vehicle')
+class RegisterShipperSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password_confirmation = serializers.CharField(write_only=True, required=True)
+    role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all(), required=False)
+
+    age = serializers.IntegerField(write_only=True)
+    cccd = serializers.CharField(write_only=True)
+    license_plate = serializers.CharField(write_only=True)
+    address = serializers.CharField(write_only=True)
+    phone = serializers.CharField(write_only=True)
+    vehicle = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'password', 'password_confirmation', 'role', 'email',
+            'first_name', 'last_name', 'age', 'cccd', 'license_plate', 'address', 'phone', 'vehicle'
+        )
+
+    def validate(self, data):
+        if data['password'] != data['password_confirmation']:
+            raise serializers.ValidationError("Passwords must match.")
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('password_confirmation')
+
+        role = validated_data.pop('role', None) or Role.objects.filter(role_name="Shipper").first()
+        age = validated_data.pop('age')
+        cccd = validated_data.pop('cccd')
+        license_plate = validated_data.pop('license_plate')
+        address = validated_data.pop('address')
+        phone = validated_data.pop('phone')
+        vehicle = validated_data.pop('vehicle')
+
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            email=validated_data['email'],
+            role=role
+        )
+        
+        Shipper.objects.create(
+            user=user,
+            age=age,
+            cccd=cccd,
+            license_plate=license_plate,
+            address=address,
+            phone=phone,
+            vehicle=vehicle
+        )
+
+        return user
+class RegisterRestaurantSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password_confirmation = serializers.CharField(write_only=True, required=True)
+    role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all(), required=False)
+
+ 
+    restaurant_name= serializers.CharField(write_only=True)
+    address_restaurant = serializers.CharField(write_only=True)
+    phone_restaurant = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'password', 'password_confirmation', 'role', 'email',
+            'first_name', 'last_name','restaurant_name', 'address_restaurant', 'phone_restaurant'
+        )
+
+    def validate(self, data):
+        if data['password'] != data['password_confirmation']:
+            raise serializers.ValidationError("Passwords must match.")
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('password_confirmation')
+
+        role = validated_data.pop('role', None) or Role.objects.filter(role_name="Host").first()
+        restaurant_name=validated_data.pop('restaurant_name')
+        address_restaurant = validated_data.pop('address_restaurant')
+        phone_restaurant = validated_data.pop('phone_restaurant')
+
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            email=validated_data['email'],
+            role=role
+        )
+        
+        Restaurant.objects.create(
+            user=user,
+            restaurant_name=restaurant_name,
+            address_restaurant=address_restaurant,
+            phone_restaurant=phone_restaurant,
+        )
+
+        return user
+
 class Serializer_Cart(serializers.ModelSerializer):
     class Meta:
         model=Cart

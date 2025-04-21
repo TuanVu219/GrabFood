@@ -36,7 +36,7 @@ class User(AbstractUser,Model):
     
     def __str__(self):
         return self.username
-    
+
 class Customer(Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE,related_name="customer_user")
     age=models.IntegerField(null=True, blank=True)
@@ -121,8 +121,8 @@ class CartItem(Model):
         return f"{self.quantity} of {self.food.food_name} in cart for {self.cart.customer.user.username}"
 
 class History(Model):
-    customer=models.OneToOneField(Customer,on_delete=models.Case,related_name='customer_history')
-    menu=models.OneToOneField(MenuFood,on_delete=models.CASCADE,related_name='menu_history')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='histories')
+    menu = models.ForeignKey(MenuFood, on_delete=models.CASCADE, related_name='histories')
     count=models.IntegerField(
         default=1,
         validators=[MinValueValidator(1)],

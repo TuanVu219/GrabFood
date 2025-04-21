@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
-from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart,Serializer_CartItem,Serializer_FavouriteMenu,Serializer_Voucher
+from .serializers import RegisterSerializer,UserSerializer,SearchSerializer,CustomerSerializer,RegisterRestaurant,Serializer_FoodType,Serializer_Menu,Serializer_ReviewMenu,Serializer_Shipper,Serializer_Cart,Serializer_CartItem,Serializer_FavouriteMenu,Serializer_Voucher,RegisterShipperSerializer, RegisterRestaurantSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics
 from .models import User, Customer,Restaurant,TypeFood,MenuFood,ReviewMenu,Shipper,Cart,CartItem,FavoriteMenu,Voucher
@@ -91,6 +91,7 @@ class LoginView(APIView):
                         "id":user.id,
                         "username":username,
                         "message":"Login Success"
+                        
                      },status=status.HTTP_200_OK)
                 return Response({
                     "message":"Login Fail"
@@ -204,22 +205,18 @@ class Profile(APIView):
   
 
 class Register_Restaurant(APIView):
-    def post(self,request):
+  def post(self, request):
         try:
-            data=JSONParser().parse(request)
-            user_id=data.get("id")
-            user=User.objects.get(id=user_id)
-            data['user']=user.id
-            if request.user.is_authenticated:
-                serializers=RegisterRestaurant(data=data)
-                if serializers.is_valid():
-                    serializers.save()
-                    return Response(serializers.data)
-                else:
-                    return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            data = JSONParser().parse(request)
+            serializer = RegisterRestaurantSerializer(data=data)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except JSONDecodeError:
                 return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
+        
 
 class Restaurant_Retrieve(generics.RetrieveUpdateDestroyAPIView):
     queryset=Restaurant.objects.all()
@@ -381,23 +378,14 @@ class RegisterShipper(APIView):
     def post(self, request):
         try:
             data = JSONParser().parse(request)
-            serializer = Serializer_Shipper(data=data)
-            if serializer.is_valid():
+            serializer = RegisterShipperSerializer(data=data)
+            if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.data)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            # Lấy thông tin chi tiết lỗi
-            error_message = str(e)
-            error_trace = traceback.format_exc()  # Lấy thông tin stack trace lỗi
-            return JsonResponse({
-                "result": "error",
-                "message": "Json decoding error",
-                "error": error_message,
-                "trace": error_trace
-            }, status=400)
-
+        except JSONDecodeError:
+                return JsonResponse({"result": "error","message": "Json decoding error"}, status= 400)
         
 class Shipper_Retrieve(generics.RetrieveUpdateDestroyAPIView):
     queryset = Shipper.objects.all()  # Khai báo queryset ở đây
